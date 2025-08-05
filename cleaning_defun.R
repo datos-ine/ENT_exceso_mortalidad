@@ -6,7 +6,7 @@
 ### https://datos.gob.ar/dataset/salud-defunciones-generales-mensuales-ocurridas-registradas-republica-argentina
 ### Autora: Tamara Ricardo
 ### Fecha modificación:
-
+# Tue Aug  5 16:33:53 2025 ------------------------------
 
 
 # Cargar paquetes ---------------------------------------------------------
@@ -94,16 +94,6 @@ defun <- defun_raw |>
                  "Santa Fe", "Tucumán", NA)
   )) |> 
   
-  #  # Completar nombres faltantes provincia
-  # mutate(prov_nombre = case_when(
-  #   region == "NOA1" ~ "Jujuy, Salta",
-  #   region == "NOA2" ~ "Catamarca, Santiago del Estero",
-  #   region == "Cuyo2" ~ "San Juan, San Luis, La Rioja",
-  #   region == "Patagonia Norte" ~ "La Pampa, Neuquén, Río Negro",
-  #   region == "Patagonia Sur" ~ "Chubut, Santa Cruz, Tierra del Fuego",
-  #   .default = prov_nombre
-  # )) |> 
-  
   # Modificar etiquetas grupo etario
   mutate(grupo_etario = fct_relabel(
     grupo_etario, ~ c("20-39 años", "40-49 años", "50-59 años",
@@ -112,18 +102,29 @@ defun <- defun_raw |>
   
   # Crear columna para causas de muerte
   mutate(causa_def = case_when(
-    # Cáncer
+    # Tumores malignos (C00:C99)
     cie10_grupo == "0200 T MALIGNOS" ~ "Cáncer",
-    # Cardiovasculares
-    cie10_grupo == "0900 ENF  DEL SISTEMA CIRCULATORIO" ~ "Enfermedad cardiovascular",
-    # Diabetes
-    cie10_grupo == "0300 DIABETES MELLITUS" ~ "Diabetes mellitus",
-    # Respiratorias crónicas: J30-J98
-    between(cie10_cod, "J30", "J98") ~ "Enfermedad respiratoria crónica",
-    # COVID-19
-    cie10_cod == "U07" ~ "COVID-19",
+    # Diabetes mellitus (E10:E14)
+    cie10_grupo == "0300 DIABETES MELLITUS" ~ "Diabetes",
+    # Respiratorias crónicas (J30:J98)
+    between(cie10_cod, "J30", "J98") ~ "Enf. respiratorias crónicas",
+    # Hipertensión arterial (I10:I13)
+    between(cie10_cod, "I10", "I15") ~ "Hipertensión",
+    # Enfermedad cardíaca isquémica (I20:I25)
+    between(cie10_cod, "I20", "I25") ~ "Enf.cardíaca isquémica",
+    # ACV (I60:I69)
+    between(cie10_cod, "I60", "I69") ~ "ACV",
+    # Otras enfermedades cardiovasculares
+    between(cie10_cod, "I00", "I09")|
+      between(cie10_cod, "I14", "I19")|
+      between(cie10_cod, "I26", "I59")|
+      between(cie10_cod, "I70", "I99") ~ "Otras cardiovasculares",
+    # Alzheimer y demencias (F00, F01, F03, G30:G31)
+    cie10_cod %in% c("F00", "F01", "F03", "G30", "G31") ~ "Alzheimer/Demencias",
+    # Parkinson (G20)
+    cie10_cod == "G20" ~ "Parkinson",
     .default = "Otra"
-  )) |> 
+    )) |> 
   
   # Agrupar datos
   count(anio_def, mes_def, region, prov_id, prov_nombre, grupo_etario, sexo, causa_def,
