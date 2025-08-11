@@ -4,8 +4,7 @@
 ### Disponibles en:
 ### https://datos.gob.ar/dataset/salud-defunciones-generales-mensuales-ocurridas-registradas-republica-argentina
 ### Autora: Tamara Ricardo
-### Fecha modificación:
-
+### Fecha modificación: 11-08-25
 
 # Cargar paquetes --------------------------------------------------------
 pacman::p_load(
@@ -149,9 +148,16 @@ defun <- defun_raw |>
     ))
 
 
+## Agrupar datos
+defun_mes <- defun |> 
+  count(prov_id, prov_nombre, region, anio_def, mes_def, sexo, grupo_etario, causa_def_c,
+  wt = cantidad)
+
+
+
 ### Explorar datos limpios
 tabyl(defun, causa_def, causa_def_c)
 
 
 # Guardar datos limpios ---------------------------------------------------
-export(defun, file = "clean/defun_2015_2022.csv")
+export(defun_mes, file = "clean/defun_2015_2022.csv")
